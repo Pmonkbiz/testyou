@@ -20,70 +20,88 @@
             width: 100%;
             height: auto;
         }
-        #choices {
-            position: absolute;
-            bottom: 40%;
-            width: 100%;
-            display: none;
+        /* 全画面ボタンを非表示 */
+        video::-webkit-media-controls-fullscreen-button {
+            display: none !important;
         }
-        .choice-button {
-            padding: 2% 4%;
-            font-size: 1.5vw;
-            background-color: rgba(83, 123, 150, 0.7);
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            position: absolute;
+        video::-moz-fullscreen-button {
+            display: none !important;
         }
-        .button-sale {
-            left: 0;
-            margin-left: 10px;
+        video::fullscreen-button {
+            display: none !important;
         }
-        .button-event {
-            right: 0;
-            margin-right: 10px;
+        /* スマホ用スタイル */
+        @media (max-width: 768px) {
+            video {
+                pointer-events: none; /* 動画の操作を無効化 */
+                user-select: none;    /* 動画の選択を無効化 */
+            }
         }
-        .choice-button:hover {
-            background-color: rgba(171, 197, 215, 0.7);
-        }
-        .back-button {
-            position: absolute;
-            bottom: 30%;
-            left: 10px;
-            padding: 1% 2%;
-            font-size: 1vw;
-            background-color: rgba(200, 50, 50, 0.7);
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .back-button:hover {
-            background-color: rgba(255, 80, 80, 0.7);
-        }
+        /* 丸い再生ボタンのレスポンシブデザイン */
+#play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10vw; /* ビューポート幅の15% */
+    height: 10vw; /* ビューポート幅の15% */
+    font-size: 4vw; /* ボタン内のフォントサイズも調整 */
+    background-color: rgba(207, 126, 89, 0.8);
+    color: rgb(250, 250, 250);
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0px 4px 8px rgba(184, 105, 105, 0.3);
+}
+
+#play-button:hover {
+    background-color: rgba(210, 162, 128, 0.9);
+}
+
+/* 小さい画面向けのスタイル調整 */
+@media (max-width: 768px) {
+    #play-button {
+        width: 25vw; /* 小さい画面ではボタンを少し大きめに */
+        height: 25vw;
+        font-size: 8vw;
+    }
+}
+
+/* 非常に小さいデバイス対応 */
+@media (max-width: 480px) {
+    #play-button {
+        width: 35vw; /* 更に小さい画面に対応 */
+        height: 35vw;
+        font-size: 10vw;
+    }
+}
+
     </style>
 </head>
 <body>
 
 <div id="video-container">
-    <video id="interactive-video" controls>
+    <video id="interactive-video">
         <source src="movie/Pc_video.mp4" type="video/mp4">
         申し訳ありませんが、ブラウザはビデオタグをサポートしていません。
     </video>
+    <button id="play-button" onclick="playMainVideo()">▶</button>
 
     <div id="choices">
         <button class="choice-button button-sale" onclick="handleChoice('sale')">セール</button>
         <button class="choice-button button-event" onclick="handleChoice('event')">イベント</button>
     </div>
 
-    <video id="sale-video" style="display: none;" controls>
+    <video id="sale-video" style="display: none;">
         <source src="movie/future.mp4" type="video/mp4">
         申し訳ありませんが、ブラウザはビデオタグをサポートしていません。
     </video>
     <button class="back-button" id="sale-back" style="display: none;" onclick="goBack()">戻る</button>
 
-    <video id="event-video" style="display: none;" controls>
+    <video id="event-video" style="display: none;">
         <source src="movie/kuusatsu.mp4" type="video/mp4">
         申し訳ありませんが、ブラウザはビデオタグをサポートしていません。
     </video>
@@ -92,6 +110,7 @@
 
 <script>
     const mainVideo = document.getElementById('interactive-video');
+    const playButton = document.getElementById('play-button');
     const choices = document.getElementById('choices');
     const saleVideo = document.getElementById('sale-video');
     const eventVideo = document.getElementById('event-video');
@@ -99,6 +118,14 @@
     const eventBackButton = document.getElementById('event-back');
 
     let lastMainVideoTime = 0;
+
+    function playMainVideo() {
+        mainVideo.play().then(() => {
+            playButton.style.display = 'none';
+        }).catch(error => {
+            console.log("自動再生がブロックされました:", error);
+        });
+    }
 
     mainVideo.addEventListener('timeupdate', function () {
         if (mainVideo.currentTime >= 3 && mainVideo.currentTime < 4) {
@@ -108,6 +135,7 @@
 
     mainVideo.addEventListener('pause', function () {
         lastMainVideoTime = mainVideo.currentTime;
+        playButton.style.display = 'flex';
     });
 
     function showChoices() {
@@ -139,6 +167,7 @@
         mainVideo.style.display = 'block';
         mainVideo.currentTime = lastMainVideoTime;
         mainVideo.play();
+        playButton.style.display = 'none';
         showChoices();
     }
 
@@ -149,6 +178,13 @@
     eventVideo.addEventListener('play', function () {
         choices.style.display = 'none';
     });
+
+    // スマホでの長押し選択制限を追加
+    document.addEventListener('touchstart', function (event) {
+        if (event.target.tagName === 'VIDEO' && window.innerWidth <= 768) {
+            event.preventDefault();
+        }
+    }, { passive: false });
 </script>
 
 </body>
